@@ -13,18 +13,22 @@ import time
 MTIME = 0
 
 def scan_var_log_secure():
+    global MTIME
     new_MTIME = os.path.getmtime("/var/log/secure")
     if MTIME == new_MTIME:
-        time.sleep(60)
+        print "MTIME = %f" % MTIME
         return
     else:
         # code to scan new occurrences.
+        print "new_MTIME = %f" % new_MTIME
+        MTIME = new_MTIME
     return
 
 
 def main():
     while 1:
         scan_var_log_secure()
+        time.sleep(60)
     print MTIME
 
 
