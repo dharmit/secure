@@ -12,14 +12,6 @@ import time
 
 MTIME = 0
 
-def has_failed_password_msg(l):
-    s = l.split(' ')
-    msg = ' '.join(s[5:9])
-    if msg == 'Failied password for root':
-        print "Should not enter here"
-        return True
-    return False
-
 def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
     
