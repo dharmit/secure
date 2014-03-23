@@ -28,13 +28,13 @@ def check_for_failed_password(list_of_readlines):
 
 def scan_var_log_secure():
     global MTIME
-    new_MTIME = os.path.getmtime("/var/log/secure-20140323")
+    new_MTIME = os.path.getmtime("/var/log/secure")
     if MTIME == new_MTIME:
         return
     else:
         list_of_readlines = []
         try:
-            with open('/var/log/secure-20140323') as f:
+            with open('/var/log/secure') as f:
                 list_of_readlines = f.readlines()
                 check_for_failed_password(list_of_readlines)
         except IOError as e:
@@ -55,7 +55,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        MTIME = os.path.getmtime("/var/log/secure-20140323")
+        MTIME = os.path.getmtime("/var/log/secure")
     except os.error as e:
         print '/var/log/secure does not exist. Make sure the file exists and '\
               'try again later.'
