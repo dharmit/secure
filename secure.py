@@ -12,15 +12,44 @@ import time
 
 MTIME = 0
 
+def has_failed_password_msg(l):
+    s = l.split(' ')
+    msg = ' '.join(s[5:9])
+    if msg == 'Failied password for root':
+        print "Should not enter here"
+        return True
+    return False
+
+def check_for_failed_password(list_of_readlines):
+    l = list_of_readlines
+    
+    for i in range(len(l)):
+        #if has_failed_password_msg(l[i]) == True:
+        if ' '.join(l[i].split(' ')[5:9]) == 'Failed password for root':
+            print l[i]
+            # write code to parse this line containing details of break-in
+            # attempt. Also check db for existing events and ignore already
+            # stored events. Check only for new events.
+        else:
+            continue
+
 def scan_var_log_secure():
     global MTIME
-    new_MTIME = os.path.getmtime("/var/log/secure")
+    new_MTIME = os.path.getmtime("/var/log/secure-20140323")
     if MTIME == new_MTIME:
-        print "MTIME = %f" % MTIME
         return
     else:
-        # code to scan new occurrences.
-        print "new_MTIME = %f" % new_MTIME
+        list_of_readlines = []
+        try:
+            with open('/var/log/secure-20140323') as f:
+                list_of_readlines = f.readlines()
+                check_for_failed_password(list_of_readlines)
+        except IOError as e:
+            print "You do not have enough permissions to access the file.\n" \
+                    "Run the program as sudo or root user and try again."
+            sys.exit()         
+
+        #print "new_MTIME = %f" % new_MTIME
         MTIME = new_MTIME
     return
 
@@ -28,13 +57,12 @@ def scan_var_log_secure():
 def main():
     while 1:
         scan_var_log_secure()
-        time.sleep(60)
-    print MTIME
+        time.sleep(5)
 
 
 if __name__ == "__main__":
     try:
-        MTIME = os.path.getmtime("/var/log/secure")
+        MTIME = os.path.getmtime("/var/log/secure-20140323")
     except os.error as e:
         print '/var/log/secure does not exist. Make sure the file exists and ' \
                 'try again later.'
