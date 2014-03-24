@@ -12,11 +12,11 @@ Features:
 Requirements:
 ------------
 * To obtain expected results using `secure`, you need to configure `rsyslog` to log dates compatible with RFC 3146. This is because by default `rsyslog1` doesn't log year in the messages. To enable RFC 3146 compatibility, comment out below line from `/etc/rsyslog.conf`:
-~~~
-$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-~~~
+
+    $ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
 and add below two lines:
-~~~
-$template RFC3164fmt,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag%%msg%"
-*.* /var/log/all-messages.log;ExampleFormat"
-~~~
+
+    $template RFC3164fmt,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag%%msg%"
+    *.* /var/log/all-messages.log;ExampleFormat"
+
