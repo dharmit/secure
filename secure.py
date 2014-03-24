@@ -52,7 +52,7 @@ def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
     for i in range(len(l)):
         #if has_failed_password_msg(l[i]) == True:
-        if ' '.join(l[i].split(' ')[5:9]) == 'Failed password for root':
+        if ' '.join(l[i].split(' ')[3:7]) == 'Failed password for root':
             print l[i]
             # write code to parse this line containing details of break-in
             # attempt. Also check db for existing events and ignore already
