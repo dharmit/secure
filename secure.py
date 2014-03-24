@@ -1,9 +1,10 @@
-# secure.py checks /var/log/secure for new occurrences of "Failed password"
-# mesages and sends a mail for new break-in attempts on the system. I also
-# plan to add a feature to drop any traffic from an IP that has attempted to
-# break-in more than configured times.
+"""secure.py checks /var/log/secure for new occurrences of "Failed password"
+mesages and sends a mail for new break-in attempts on the system. I also
+plan to add a feature to drop any traffic from an IP that has attempted to
+break-in more than configured times."""
 
 import os
+import sqlite3
 import sys
 import time
 
@@ -12,6 +13,40 @@ import time
 
 MTIME = 0
 
+
+def fetch_last_from_db():
+    """ Code in this function will fetch the last entry in the db. This is
+    is helpful in figuring out if the data parsed by the program is newer
+    than the existing db entries."""
+    pass
+
+
+def insert_into_db(l):
+    """ This funtion inserts into the database the break-in attempts that are
+    newer than the last one as returned by fetch_last_from_db() function"""
+    pass
+
+
+def new_attempts_from_last():
+    """This function will determine the break-in attempts newer than the last
+    break-in attempt"""
+    pass
+
+
+def clean_for_db(l):
+    """ This function cleans the log message containing "Failed password for
+    root" to reduce it only upto the values that need to be entered into the
+    db. Values needed for db - month(0), date(1), time(2), 
+    remote_ip_address(10)"""
+    pass
+
+def database_operations(l):
+    """ This function takes a list of break-in attempt log messages that our
+    program found from /var/log/secure and then performs database operations
+    on it like - finding last break-in attempt's details, ensure to insert
+    and notify only for attempts newer than last attempt, insert these new
+    entries into the database"""
+    pass
 
 def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
