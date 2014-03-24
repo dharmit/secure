@@ -12,7 +12,7 @@ import time
 # /var/log/secure file
 
 MTIME = 0
-
+DB = sqlite3.connect("secure.db")
 
 def fetch_last_from_db():
     """ Code in this function will fetch the last entry in the db. This is
@@ -83,9 +83,11 @@ def scan_var_log_secure():
 
 
 def main():
+    global DB
     while 1:
         scan_var_log_secure()
         time.sleep(5)
+    DB.close()
 
 
 if __name__ == "__main__":

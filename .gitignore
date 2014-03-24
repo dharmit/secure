@@ -1,5 +1,5 @@
 *.py[cod]
-
+*.db
 # C extensions
 *.so
 
@@ -11,12 +11,14 @@ build
 eggs
 parts
 bin
+include
 var
 sdist
 develop-eggs
 .installed.cfg
 lib
 lib64
+*.pyc
 __pycache__
 
 # Installer logs
