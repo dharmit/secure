@@ -21,6 +21,7 @@ def get_db_cursors():
     global DB2
     return DB1.cursor(), DB2.cursor()
 
+
 def database_exists():
     return os.path.exists("var_log_secure.db") and os.path.exists("count.db")
 
@@ -57,7 +58,6 @@ def create_database():
         DB2.close()
 
 
-
 def fetch_last_from_db():
     """ Code in this function will fetch the last entry in the db. This is
     is helpful in figuring out if the data parsed by the program is newer
@@ -80,9 +80,10 @@ def new_attempts_from_last():
 def clean_for_db(l):
     """ This function cleans the log message containing "Failed password for"
     to reduce it only upto the values that need to be entered into the
-    db. Values needed for db - month(0), date(1), time(2), 
+    db. Values needed for db - month(0), date(1), time(2),
     remote_ip_address(10)"""
     pass
+
 
 def database_operations(l):
     """ This function takes a list of break-in attempt log messages that our
@@ -104,7 +105,7 @@ def check_for_failed_password(list_of_readlines):
             # stored events. Check only for new events.
             x = l[i].split('T')
             date = x[0].split('-')
-            cursor1, cursor2 = get_db_cursors() 
+            cursor1, cursor2 = get_db_cursors()
         else:
             continue
 
@@ -133,7 +134,7 @@ def scan_var_log_secure():
 def main():
     if not database_exists():
         create_database()
-    
+
     global DB1
     global DB2
     try:
