@@ -15,6 +15,12 @@ MTIME = 0
 DB1 = None
 DB2 = None
 
+
+def get_db_cursors():
+    global DB1
+    global DB2
+    return DB1.cursor(), DB2.cursor()
+
 def database_exists():
     return os.path.exists("var_log_secure.db") and os.path.exists("count.db")
 
@@ -86,15 +92,19 @@ def database_operations(l):
     entries into the database"""
     pass
 
+
 def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
     for i in range(len(l)):
         #if has_failed_password_msg(l[i]) == True:
         if ' '.join(l[i].split(' ')[3:6]) == 'Failed password for':
-            print l[i]
+            #print l[i]
             # write code to parse this line containing details of break-in
             # attempt. Also check db for existing events and ignore already
             # stored events. Check only for new events.
+            x = l[i].split('T')
+            date = x[0].split('-')
+            cursor1, cursor2 = get_db_cursors() 
         else:
             continue
 
@@ -123,12 +133,23 @@ def scan_var_log_secure():
 def main():
     if not database_exists():
         create_database()
-    else:
-        # code to use the existing database.
-
-    while 1:
-        scan_var_log_secure()
-        time.sleep(5)
+    
+    global DB1
+    global DB2
+    try:
+        DB1 = sqlite3.connect("var_log_secure.db")
+        DB2 = sqlite3.connect("count.db")
+        while 1:
+            scan_var_log_secure()
+            time.sleep(5)
+    except Exception as e:
+        DB1.rollback()
+        DB2.rollback()
+        print e
+        sys.exit(1)
+    finally:
+        DB1.close()
+        DB2.close()
 
 
 if __name__ == "__main__":
