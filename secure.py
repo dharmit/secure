@@ -25,7 +25,8 @@ def create_database():
     from a particular IP. In future we plan to drop all packets coming from an
     IP that has made X (say, 5) attempts using firewall rules.
     """
-    global DB
+    global DB1
+    global DB2
     try:
         DB1 = sqlite3.connect("var_log_secure.db")
         DB2 = sqlite3.connect("count.db")
@@ -71,8 +72,8 @@ def new_attempts_from_last():
 
 
 def clean_for_db(l):
-    """ This function cleans the log message containing "Failed password for
-    root" to reduce it only upto the values that need to be entered into the
+    """ This function cleans the log message containing "Failed password for"
+    to reduce it only upto the values that need to be entered into the
     db. Values needed for db - month(0), date(1), time(2), 
     remote_ip_address(10)"""
     pass
@@ -89,7 +90,7 @@ def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
     for i in range(len(l)):
         #if has_failed_password_msg(l[i]) == True:
-        if ' '.join(l[i].split(' ')[3:7]) == 'Failed password for root':
+        if ' '.join(l[i].split(' ')[3:6]) == 'Failed password for':
             print l[i]
             # write code to parse this line containing details of break-in
             # attempt. Also check db for existing events and ignore already
