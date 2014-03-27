@@ -12,18 +12,9 @@ import time
 # /var/log/secure file
 
 MTIME = 0
-DB1 = None
-DB2 = None
-
-
-def get_db_cursors():
-    global DB1
-    global DB2
-    return DB1.cursor(), DB2.cursor()
-
 
 def database_exists():
-    return os.path.exists("var_log_secure.db") and os.path.exists("count.db")
+    return os.path.exists("var_log_secure.db") #and os.path.exists("count.db")
 
 
 def create_database():
@@ -32,30 +23,16 @@ def create_database():
     from a particular IP. In future we plan to drop all packets coming from an
     IP that has made X (say, 5) attempts using firewall rules.
     """
-    global DB1
-    global DB2
     try:
-        DB1 = sqlite3.connect("var_log_secure.db")
-        DB2 = sqlite3.connect("count.db")
-
-        cursor1 = DB1.cursor()
-        cursor2 = DB2.cursor()
-        cursor1.execute("""CREATE TABLE IF NOT EXISTS
-                       attempts(id INTEGER PRIMARY KEY, day INTEGER,
-                       month INTEGER, year INTEGER, ip TEXT
-                       """)
-        cursor2.execute("""CREATE TABLE IF NOT EXISTS
-                        count(ip TEXT PRIMARY KEY, trials INTEGER
-                        """)
-        DB1.commit()
-        DB2.commit()
+        db = sqlite3.connect("var_log_secure.db")
+        cursor = db.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS
+                       attempts(id INTEGER PRIMARY KEY, day INTEGER, month INTEGER,
+                       year INTEGER, ip TEXT)''')
+        db.commit()
     except Exception as e:
-        DB1.rollback()
-        DB2.rollback()
-        raise e
-    finally:
-        DB1.close()
-        DB2.close()
+        print e
+    finally: db.close()
 
 
 def fetch_last_from_db():
@@ -65,11 +42,25 @@ def fetch_last_from_db():
     pass
 
 
-def insert_into_db(l):
+def insert_into_db(data):
     """ This funtion inserts into the database the break-in attempts that are
     newer than the last one as returned by fetch_last_from_db() function"""
-    pass
-
+    
+    day, month, year = data["day"], data["month"], data["year"]
+    user, ip = data["user"], data["ip"]
+    
+    try:
+        db1 = sqlite3.connect("var_log_secure.db")
+        cursor1 = db1.cursor()
+        cursor1.execute("INSERT INTO attempts(day, month, year, ip) VALUES(?, ?,\
+                        ?, ?)", (day, month, year, ip))
+        db1.commit()
+    except Exception as e:
+        db1.rollback()
+        print e
+    finally:
+        db1.close()
+        
 
 def new_attempts_from_last():
     """This function will determine the break-in attempts newer than the last
@@ -77,35 +68,27 @@ def new_attempts_from_last():
     pass
 
 
-def clean_for_db(l):
-    """ This function cleans the log message containing "Failed password for"
-    to reduce it only upto the values that need to be entered into the
-    db. Values needed for db - month(0), date(1), time(2),
-    remote_ip_address(10)"""
-    pass
-
-
-def database_operations(l):
+def database_operations(date, msg):
     """ This function takes a list of break-in attempt log messages that our
     program found from /var/log/secure and then performs database operations
     on it like - finding last break-in attempt's details, ensure to insert
     and notify only for attempts newer than last attempt, insert these new
     entries into the database"""
-    pass
+    year, month, day = date[0], date[1], date[2]
+    user, ip = msg[6], msg[8]
+    data = {"year" : year, "month" : month, "day" : day, "ip" : ip, "user" :
+            user}
+    insert_into_db(data)
 
 
 def check_for_failed_password(list_of_readlines):
     l = list_of_readlines
     for i in range(len(l)):
-        #if has_failed_password_msg(l[i]) == True:
         if ' '.join(l[i].split(' ')[3:6]) == 'Failed password for':
-            #print l[i]
-            # write code to parse this line containing details of break-in
-            # attempt. Also check db for existing events and ignore already
-            # stored events. Check only for new events.
-            x = l[i].split('T')
+            x = l[i].split('T')  # Temporary variable to fetch date.
             date = x[0].split('-')
-            cursor1, cursor2 = get_db_cursors()
+            message = l[i].split(' ')
+            database_operations(date, message)
         else:
             continue
 
