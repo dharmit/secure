@@ -143,8 +143,6 @@ def main():
     if not database_exists():
         create_database()
 
-    global DB1
-    global DB2
     try:
         DB1 = sqlite3.connect("var_log_secure.db")
         DB2 = sqlite3.connect("count.db")
