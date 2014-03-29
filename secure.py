@@ -12,6 +12,7 @@ import time
 # /var/log/secure file
 
 MTIME = 0
+LASTROWID = 0
 
 def database_exists():
     return os.path.exists("var_log_secure.db") #and os.path.exists("count.db")
@@ -27,7 +28,8 @@ def create_database():
         db = sqlite3.connect("var_log_secure.db")
         cursor = db.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS
-                       attempts(id INTEGER PRIMARY KEY, day INTEGER, month INTEGER,
+                       attempts(id INTEGER PRIMARY KEY, hour INTEGER, minute
+                       INTEGER, second INTEGER, day INTEGER, month INTEGER,
                        year INTEGER, ip TEXT)''')
         db.commit()
     except Exception as e:
@@ -39,21 +41,40 @@ def fetch_last_from_db():
     """ Code in this function will fetch the last entry in the db. This is
     is helpful in figuring out if the data parsed by the program is newer
     than the existing db entries."""
-    pass
+    global LASTROWID
+    print LASTROWID     #debug statement
+    if LASTROWID:
+        try:
+            db = sqlite3.connect("var_log_secure.db")
+            cursor = db.cursor()
+            cursor.execute('select * from attempts where id=?',(LASTROWID))
+            data = cursor.fetchone()
+            print data      #debug statement
+            return data
+        except Exception as e:
+            print e
+        finally:
+            db.close()
+    return None
 
 
 def insert_into_db(data):
     """ This funtion inserts into the database the break-in attempts that are
     newer than the last one as returned by fetch_last_from_db() function"""
-    
-    day, month, year = data["day"], data["month"], data["year"]
+    global LASTROWID
+    day, month, year, hour, minute, second = data["day"], data["month"],\
+                                             data["year"], data["hour"],\
+                                             data["minute"], data["second"]
     user, ip = data["user"], data["ip"]
+    fetch_last_from_db()
     
     try:
         db1 = sqlite3.connect("var_log_secure.db")
         cursor1 = db1.cursor()
-        cursor1.execute("INSERT INTO attempts(day, month, year, ip) VALUES(?, ?,\
-                        ?, ?)", (day, month, year, ip))
+        cursor1.execute("INSERT INTO attempts(hour, minute, second, day,\
+                        month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
+                        (hour, minute, second, day, month, year, ip))
+        LASTROWID = cursor1.lastrowid
         db1.commit()
     except Exception as e:
         db1.rollback()
@@ -69,15 +90,19 @@ def new_attempts_from_last():
 
 
 def database_operations(date, msg):
-    """ This function takes a list of break-in attempt log messages that our
-    program found from /var/log/secure and then performs database operations
-    on it like - finding last break-in attempt's details, ensure to insert
-    and notify only for attempts newer than last attempt, insert these new
-    entries into the database"""
+    """ Initialy part of this code takes care of splitting 'msg' into chunks
+    useful for dataabase. Next it calls various db related functions to insert
+    the data or retrieve details of last known attempt."""
+
+    time_of_attempt = msg[0].split('T')[1].split(':')
+    time_of_attempt[2] = int(float(time_of_attempt[2].split('+')[0]))
+
     year, month, day = date[0], date[1], date[2]
+    hour, minute, second = time_of_attempt[0], time_of_attempt[1],\
+                           time_of_attempt[2]
     user, ip = msg[6], msg[8]
     data = {"year" : year, "month" : month, "day" : day, "ip" : ip, "user" :
-            user}
+            user, "hour" : hour, "minute" : minute, "second" : second}
     insert_into_db(data)
 
 
