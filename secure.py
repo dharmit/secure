@@ -37,23 +37,25 @@ def create_database():
     finally: db.close()
 
 
-def fetch_last_from_db():
+def exists_in_db(data):
     """ Code in this function will fetch the last entry in the db. This is
     is helpful in figuring out if the data parsed by the program is newer
     than the existing db entries."""
-    global LASTROWID
-    if LASTROWID:
-        try:
-            db = sqlite3.connect("var_log_secure.db")
-            cursor = db.cursor()
-            cursor.execute('select * from attempts where id=?',(LASTROWID,))
-            data = cursor.fetchone()
-            return data
-        except Exception as e:
-            raise e
-        finally:
-            db.close()
-    return None
+    try:
+        db = sqlite3.connect("var_log_secure.db")
+        cursor = db.cursor()
+        cursor.execute("SELECT id from attempts where hour=? and minute=? and \
+                       second=? and day=? and month=? and year=? and ip=?",\
+                       (data["hour"], data["minute"], data["second"],\
+                       data["day"], data["month"], data["year"], data["ip"],))
+        id = cursor.fetchone()
+    except Exception as e:
+        raise e
+    finally:
+        db.close()
+    if id:
+        return True
+    return False
 
 
 def insert_into_db(data):
@@ -64,34 +66,20 @@ def insert_into_db(data):
                                              data["year"], data["hour"],\
                                              data["minute"], data["second"]
     user, ip = data["user"], data["ip"]
-    try:
-        db = sqlite3.connect("var_log_secure.db")
-        cursor = db.cursor()
-        cursor.execute("SELECT count(*) from attempts")
-        LASTROWID = cursor.fetchone()[0]
-        print "Lastrowid in try block, ", LASTROWID
-    except Exception as e:
-        raise e
-    finally:
-        db.close()
 
-    last_record = fetch_last_from_db()
-
-    print last_record
-
-    try:
-        db1 = sqlite3.connect("var_log_secure.db")
-        cursor1 = db1.cursor()
-        cursor1.execute("INSERT INTO attempts(hour, minute, second, day,\
-                        month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
-                        (hour, minute, second, day, month, year, ip))
-        print LASTROWID
-        db1.commit()
-    except Exception as e:
-        db1.rollback()
-        raise e
-    finally:
-        db1.close()
+    if not exists_in_db(data):
+        try:
+            db1 = sqlite3.connect("var_log_secure.db")
+            cursor1 = db1.cursor()
+            cursor1.execute("INSERT INTO attempts(hour, minute, second, day,\
+                            month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
+                            (hour, minute, second, day, month, year, ip))
+            db1.commit()
+        except Exception as e:
+            db1.rollback()
+            raise e
+        finally:
+            db1.close()
         
 
 def new_attempts_from_last():
@@ -112,8 +100,9 @@ def database_operations(date, msg):
     hour, minute, second = time_of_attempt[0], time_of_attempt[1],\
                            time_of_attempt[2]
     user, ip = msg[6], msg[8]
-    data = {"year" : year, "month" : month, "day" : day, "ip" : ip, "user" :
-            user, "hour" : hour, "minute" : minute, "second" : second}
+    data = {"year" : int(year), "month" : int(month), "day" : int(day), "ip" :
+            ip, "user" : user, "hour" : int(hour), "minute" : int(minute),
+            "second" : int(second)}
     insert_into_db(data)
 
 
