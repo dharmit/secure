@@ -1,9 +1,12 @@
 """secure.py checks /var/log/secure for new occurrences of "Failed password"
-mesages and sends a mail for new break-in attempts on the system. I also
-plan to add a feature to drop any traffic from an IP that has attempted to
+mesages and  generates notification for new break-in attempts on the system. I
+also plan to add a feature to drop any traffic from an IP that has attempted to
 break-in more than configured times."""
 
 import os
+import pygtk
+pygtk.require('2.0')
+import pynotify
 import sqlite3
 import sys
 import time
@@ -75,6 +78,7 @@ def insert_into_db(data):
                             month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
                             (hour, minute, second, day, month, year, ip))
             db1.commit()
+            new_attempts_from_last(data)
         except Exception as e:
             db1.rollback()
             raise e
@@ -82,10 +86,16 @@ def insert_into_db(data):
             db1.close()
         
 
-def new_attempts_from_last():
+def new_attempts_from_last(data):
     """This function will determine the break-in attempts newer than the last
     break-in attempt"""
-    pass
+    print data
+    t = data['ip'] + " tried to login at " + str(data['hour']) + ':'+ \
+            str(data['minute']) + ":"+ str(data['second'])
+    t = str(t)
+    pynotify.init("Break-in attempt")
+    n = pynotify.Notification(t)
+    n.show()
 
 
 def database_operations(date, msg):
