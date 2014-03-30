@@ -33,7 +33,7 @@ def create_database():
                        year INTEGER, ip TEXT)''')
         db.commit()
     except Exception as e:
-        print e
+        raise e
     finally: db.close()
 
 
@@ -42,17 +42,15 @@ def fetch_last_from_db():
     is helpful in figuring out if the data parsed by the program is newer
     than the existing db entries."""
     global LASTROWID
-    print LASTROWID     #debug statement
     if LASTROWID:
         try:
             db = sqlite3.connect("var_log_secure.db")
             cursor = db.cursor()
-            cursor.execute('select * from attempts where id=?',(LASTROWID))
+            cursor.execute('select * from attempts where id=?',(LASTROWID,))
             data = cursor.fetchone()
-            print data      #debug statement
             return data
         except Exception as e:
-            print e
+            raise e
         finally:
             db.close()
     return None
@@ -66,8 +64,11 @@ def insert_into_db(data):
                                              data["year"], data["hour"],\
                                              data["minute"], data["second"]
     user, ip = data["user"], data["ip"]
-    fetch_last_from_db()
-    
+    last_record = fetch_last_from_db()
+
+    if last_record:
+        print last_record[7]
+
     try:
         db1 = sqlite3.connect("var_log_secure.db")
         cursor1 = db1.cursor()
@@ -78,7 +79,7 @@ def insert_into_db(data):
         db1.commit()
     except Exception as e:
         db1.rollback()
-        print e
+        raise e
     finally:
         db1.close()
         
@@ -136,28 +137,16 @@ def scan_var_log_secure():
 
         #print "new_MTIME = %f" % new_MTIME
         MTIME = new_MTIME
-    return
+    #return
 
 
 def main():
     if not database_exists():
         create_database()
-
-    try:
-        DB1 = sqlite3.connect("var_log_secure.db")
-        DB2 = sqlite3.connect("count.db")
-        while 1:
-            scan_var_log_secure()
-            time.sleep(5)
-    except Exception as e:
-        DB1.rollback()
-        DB2.rollback()
-        print e
-        sys.exit(1)
-    finally:
-        DB1.close()
-        DB2.close()
-
+    while 1:
+        scan_var_log_secure()
+        time.sleep(5)
+    sys.exit(1)
 
 if __name__ == "__main__":
     if os.path.exists("/var/log/secure"):
