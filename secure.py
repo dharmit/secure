@@ -64,10 +64,20 @@ def insert_into_db(data):
                                              data["year"], data["hour"],\
                                              data["minute"], data["second"]
     user, ip = data["user"], data["ip"]
+    try:
+        db = sqlite3.connect("var_log_secure.db")
+        cursor = db.cursor()
+        cursor.execute("SELECT count(*) from attempts")
+        LASTROWID = cursor.fetchone()[0]
+        print "Lastrowid in try block, ", LASTROWID
+    except Exception as e:
+        raise e
+    finally:
+        db.close()
+
     last_record = fetch_last_from_db()
 
-    if last_record:
-        print last_record[7]
+    print last_record
 
     try:
         db1 = sqlite3.connect("var_log_secure.db")
@@ -75,7 +85,7 @@ def insert_into_db(data):
         cursor1.execute("INSERT INTO attempts(hour, minute, second, day,\
                         month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
                         (hour, minute, second, day, month, year, ip))
-        LASTROWID = cursor1.lastrowid
+        print LASTROWID
         db1.commit()
     except Exception as e:
         db1.rollback()
