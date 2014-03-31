@@ -10,6 +10,8 @@ import pynotify
 import sqlite3
 import sys
 import time
+import notification
+
 
 # initially set to 0, MTIME keeps a track of the latest modification time for
 # /var/log/secure file
@@ -89,14 +91,14 @@ def insert_into_db(data):
 def new_attempts_from_last(data):
     """This function will determine the break-in attempts newer than the last
     break-in attempt"""
-    print data
     t = data['ip'] + " tried to login at " + str(data['hour']) + ':'+ \
             str(data['minute']) + ":"+ str(data['second'])
     t = str(t)
-    pynotify.init("Break-in attempt")
-    n = pynotify.Notification(t)
-    n.show()
-
+    print "Trying to raise a notification.....\n\n\n"
+    notification.notification("Dharmit")
+    
+    print "\n\n\nThis is after notification...."
+    
 
 def database_operations(date, msg):
     """ Initialy part of this code takes care of splitting 'msg' into chunks
@@ -158,6 +160,8 @@ def main():
     sys.exit(1)
 
 if __name__ == "__main__":
+    #pynotify.init("Init")
+    #notification.notification("Dharmit Shah") 
     if os.path.exists("/var/log/secure"):
         sys.exit(main())
     else:
