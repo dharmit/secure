@@ -8,9 +8,9 @@ import pygtk
 pygtk.require('2.0')
 import pynotify
 import sqlite3
+import subprocess
 import sys
 import time
-import notification
 
 
 # initially set to 0, MTIME keeps a track of the latest modification time for
@@ -94,10 +94,12 @@ def new_attempts_from_last(data):
     t = data['ip'] + " tried to login at " + str(data['hour']) + ':'+ \
             str(data['minute']) + ":"+ str(data['second'])
     t = str(t)
-    print "Trying to raise a notification.....\n\n\n"
-    notification.notification("Dharmit")
-    
-    print "\n\n\nThis is after notification...."
+    if not pynotify.init("Break-in attempt"):
+        sys.exit(1)
+    n = pynotify.Notification("Break-in Attempt", t)
+    if not n.show():
+        print "Failed to raise notification"
+        sys.exit(1)
     
 
 def database_operations(date, msg):
@@ -160,8 +162,6 @@ def main():
     sys.exit(1)
 
 if __name__ == "__main__":
-    #pynotify.init("Init")
-    #notification.notification("Dharmit Shah") 
     if os.path.exists("/var/log/secure"):
         sys.exit(main())
     else:
