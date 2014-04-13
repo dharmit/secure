@@ -7,11 +7,11 @@ Features:
 --------
 * Checks the file `/var/log/secure` every minute for new occurrence of **Failed password** message(s).
 * If new attempt is found, it stores details in the SQLite database.
-* After adding details to the database, sends an e-mail to the configured address.
+* After adding details to the database, it raises a desktop notification informing the user about the break-in attempt.
 
 Requirements:
 ------------
-To obtain expected results using `secure`, you need to configure `rsyslog` to log dates compatible with RFC 3146. This is because by default `rsyslog1` doesn't log year in the messages. To enable RFC 3146 compatibility, comment out below line from `/etc/rsyslog.conf`:
+To obtain expected results using `secure`, you need to configure `rsyslog` to log dates compatible with RFC 3146. This is because by default `rsyslog` doesn't log year in the messages. To enable RFC 3146 compatibility, comment out below line from `/etc/rsyslog.conf`:
 ~~~
 $ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
 ~~~
