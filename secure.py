@@ -153,7 +153,9 @@ def scan_var_log_secure():
                 check_for_failed_password(list_of_readlines)
         except IOError as e:
             print "You do not have enough permissions to access the file.\n" \
-                  "Run the program as sudo or root user and try again."
+                  "If you are running as a non-root user, set proper ACL on "\
+                  "the /var/log/secure file: setfacl -m u:user:r "\
+                  "/var/log/secure and run again\n"
             sys.exit(1)
 
         MTIME = new_MTIME
