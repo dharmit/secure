@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """secure.py checks /var/log/secure for new occurrences of "Failed password"
 mesages and  generates notification for new break-in attempts on the system. I
 also plan to add a feature to drop any traffic from an IP that has attempted to
@@ -18,9 +19,11 @@ import time
 
 MTIME = 0
 LASTROWID = 0
+HOME = os.environ['HOME']
 
 def database_exists():
-    return os.path.exists("var_log_secure.db") #and os.path.exists("count.db")
+    global HOME
+    return os.path.exists(HOME + "/var/var_log_secure.db") 
 
 
 def create_database():
@@ -29,8 +32,9 @@ def create_database():
     from a particular IP. In future we plan to drop all packets coming from an
     IP that has made X (say, 5) attempts using firewall rules.
     """
+    global HOME
     try:
-        db = sqlite3.connect("var_log_secure.db")
+        db = sqlite3.connect(HOME + "/var/var_log_secure.db")
         cursor = db.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS
                        attempts(id INTEGER PRIMARY KEY, hour INTEGER, minute
@@ -39,15 +43,17 @@ def create_database():
         db.commit()
     except Exception as e:
         raise e
-    finally: db.close()
+    finally:
+        db.close()
 
 
 def exists_in_db(data):
     """ Code in this function will fetch the last entry in the db. This is
     is helpful in figuring out if the data parsed by the program is newer
     than the existing db entries."""
+    global HOME
     try:
-        db = sqlite3.connect("var_log_secure.db")
+        db = sqlite3.connect(HOME + "/var/var_log_secure.db")
         cursor = db.cursor()
         cursor.execute("SELECT id from attempts where hour=? and minute=? and \
                        second=? and day=? and month=? and year=? and ip=?",\
@@ -67,6 +73,7 @@ def insert_into_db(data):
     """ This funtion inserts into the database the break-in attempts that are
     newer than the last one as returned by fetch_last_from_db() function"""
     global LASTROWID
+    global HOME
     day, month, year, hour, minute, second = data["day"], data["month"],\
                                              data["year"], data["hour"],\
                                              data["minute"], data["second"]
@@ -74,7 +81,7 @@ def insert_into_db(data):
 
     if not exists_in_db(data):
         try:
-            db1 = sqlite3.connect("var_log_secure.db")
+            db1 = sqlite3.connect(HOME + "/var/var_log_secure.db")
             cursor1 = db1.cursor()
             cursor1.execute("INSERT INTO attempts(hour, minute, second, day,\
                             month, year, ip) VALUES(?, ?, ?, ?, ?, ?, ?)", \
@@ -97,9 +104,10 @@ def new_attempts_from_last(data):
     if not pynotify.init("Break-in attempt"):
         sys.exit(1)
     n = pynotify.Notification("Break-in Attempt", t)
-    if not n.show():
-        print "Failed to raise notification"
-        sys.exit(1)
+    try:
+        n.show()
+    except Exception as e:
+        print e
     
 
 def database_operations(date, msg):
@@ -146,20 +154,16 @@ def scan_var_log_secure():
         except IOError as e:
             print "You do not have enough permissions to access the file.\n" \
                   "Run the program as sudo or root user and try again."
-            sys.exit()
+            sys.exit(1)
 
-        #print "new_MTIME = %f" % new_MTIME
         MTIME = new_MTIME
-    #return
 
 
 def main():
     if not database_exists():
         create_database()
-    while 1:
-        scan_var_log_secure()
-        time.sleep(5)
-    sys.exit(1)
+    scan_var_log_secure()
+    sys.exit()
 
 if __name__ == "__main__":
     if os.path.exists("/var/log/secure"):
