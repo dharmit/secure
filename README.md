@@ -20,3 +20,9 @@ and add below two lines:
 $template RFC3164fmt,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag%%msg%"
 *.* /var/log/all-messages.log;ExampleFormat"
 ~~~
+
+Usage:
+------
+~~~
+$python secure.py
+~~~
